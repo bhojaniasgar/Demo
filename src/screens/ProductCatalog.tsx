@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { FlatList, StatusBar, StyleSheet, TextInput, RefreshControl, View, TouchableOpacity, Text } from 'react-native';
+import { FlatList, StatusBar, StyleSheet, TextInput, RefreshControl, View, TouchableOpacity, Text, SafeAreaView } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import ProductCard from '../components/ProductCard';
 import Loader from '../components/Loader';
@@ -11,12 +11,30 @@ import { useNavigation } from '@react-navigation/native';
 import { RouteConst } from '../../App';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+/**
+ * A component that is rendered when there are no products to show.
+ * It shows a FadeIn animation with a message saying "No products found".
+ * @returns {JSX.Element}
+ */
 const NoDataComponent = () => (
     <Animated.View entering={FadeIn} style={styles.noDataContainer}>
         <Text style={styles.noDataText}>No products found</Text>
     </Animated.View>
 );
 
+/**
+ * A component that renders a list of products. It renders a search bar to
+ * filter the products by title, a cart icon that shows the total quantity of
+ * items in the cart and a list of products. Each product is rendered as a
+ * {@link ProductCard} component. If there are no products to show, it shows a
+ * {@link NoDataComponent} component.
+ *
+ * The component uses the {@link productListAsyncThunk} thunk to load the list
+ * of products. It also uses the {@link setFilteredProducts} action to filter
+ * the products based on the search query.
+ *
+ * @returns {JSX.Element} A JSX element that renders the product catalog.
+ */
 const ProductCatalog = () => {
     const { isLoading, productList, filteredProducts } = useAppSelector((state) => state.product);
     const { totalQuantity } = useAppSelector((state) => state.cart);
@@ -46,61 +64,68 @@ const ProductCatalog = () => {
         setRefreshing(false);
     }, [loadProducts]);
 
-    if (isLoading && !refreshing) {
+    if (!refreshing && isLoading) {
         return <Loader text="Loading products..." />;
     }
 
     return (
-        <Animated.View entering={FadeIn} style={styles.container}>
-            <StatusBar backgroundColor={'transparent'} barStyle={'dark-content'} translucent />
+        <SafeAreaView style={styles.safeContainer}>
+            <Animated.View entering={FadeIn} style={styles.container}>
+                <StatusBar backgroundColor={'transparent'} barStyle={'dark-content'} translucent />
 
-            <View style={styles.header}>
-                <TextInput
-                    style={styles.searchBar}
-                    placeholder="Search products..."
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    placeholderTextColor="#666"
-                    accessibilityLabel="Search products"
-                    accessibilityHint="Type to search for products"
-                    accessibilityRole="search"
+                <View style={styles.header}>
+                    <TextInput
+                        style={styles.searchBar}
+                        placeholder="Search products..."
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        placeholderTextColor="#666"
+                        accessibilityLabel="Search products"
+                        accessibilityHint="Type to search for products"
+                        accessibilityRole="search"
+                    />
+
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate(RouteConst.CART_SCREEN)}
+                        accessibilityLabel="Go to cart"
+                        accessibilityHint={`You have ${totalQuantity} items in your cart`}
+                        accessibilityRole="button"
+                        style={styles.cartIconContainer}>
+                        <ShoppingCart size={24} color="#333" weight="bold" />
+                        {totalQuantity > 0 && (
+                            <View style={styles.badge} accessible accessibilityLabel={`Cart badge: ${totalQuantity} items`}>
+                                <Text style={styles.badgeText}>{totalQuantity}</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                </View>
+
+                <FlatList
+                    data={filteredProducts}
+                    renderItem={({ item }) => <ProductCard product={item} />}
+                    keyExtractor={item => item.id.toString()}
+                    ListEmptyComponent={NoDataComponent}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            accessibilityLabel="Refreshing products list"
+                            accessibilityHint="Swipe down to refresh the product catalog"
+                        />
+                    }
                 />
 
-                <TouchableOpacity
-                    onPress={() => navigation.navigate(RouteConst.CART_SCREEN)}
-                    accessibilityLabel="Go to cart"
-                    accessibilityHint={`You have ${totalQuantity} items in your cart`}
-                    accessibilityRole="button"
-                    style={styles.cartIconContainer}>
-                    <ShoppingCart size={24} color="#333" weight="bold" />
-                    {totalQuantity > 0 && (
-                        <View style={styles.badge} accessible accessibilityLabel={`Cart badge: ${totalQuantity} items`}>
-                            <Text style={styles.badgeText}>{totalQuantity}</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
-            </View>
-
-            <FlatList
-                data={filteredProducts}
-                renderItem={({ item }) => <ProductCard product={item}  />}
-                keyExtractor={item => item.id.toString()}
-                ListEmptyComponent={NoDataComponent}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        accessibilityLabel="Refreshing products list"
-                        accessibilityHint="Swipe down to refresh the product catalog"
-                    />
-                }
-            />
-
-        </Animated.View>
+            </Animated.View>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
+    safeContainer: {
+        flex: 1,
+        backgroundColor: '#f5f5f5',
+        paddingTop: StatusBar.currentHeight || 0,
+    },
     container: {
         flex: 1,
     },

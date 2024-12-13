@@ -9,10 +9,33 @@ interface ProductCardProps {
     product: TProductModal;
 }
 
+/**
+ * A component that renders a product card with an image, title, price, and an
+ * "Add to Cart" button. The image is loaded asynchronously and shows a loading
+ * indicator until it is loaded. The button is accessible with a double tap.
+ *
+ * The component uses the {@link useAppDispatch} hook to get the Redux dispatch
+ * function and the {@link addToCart} action to add the product to the cart.
+ *
+ * @param {TProductModal} product - The product to render.
+ *
+ * @returns {JSX.Element} A view representing a product card.
+ *
+ * Accessibility features:
+ * - The image has an accessibility label describing the product and an
+ *   accessibility role of "image".
+ * - The button is accessible with a double tap and has an accessibility label
+ *   and hint describing the action.
+ */
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const dispatch = useAppDispatch();
     const [isLoading, setIsLoading] = useState(true);
 
+/**
+ * Dispatches the addToCart action to add the current product to the cart.
+ * The product is added with a default quantity of 1.
+ * This function is called when the "Add to Cart" button is pressed.
+ */
     const handleAddToCart = () => {
         dispatch(addToCart({ ...product, quantity: 1 }));
     };
@@ -25,7 +48,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 resizeMode="contain"
                 onLoadStart={() => setIsLoading(true)}
                 onLoadEnd={() => setIsLoading(false)}
-                 accessibilityLabel={`Image of ${product.title}`}
+                accessibilityLabel={`Image of ${product.title}`}
                 accessibilityRole="image"
             />
             {isLoading && (

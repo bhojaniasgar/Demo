@@ -48,9 +48,6 @@ const store = configureStore({
 
 export const persistor = persistStore(store);
 export default store;
-
-// Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
 export type AppDispatch = typeof store.dispatch;
-
 export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
 export const useAppSelector = useSelector.withTypes<TRootState>();

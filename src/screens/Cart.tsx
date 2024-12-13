@@ -9,6 +9,18 @@ import { useDebounce } from '../hooks/useDebounce';
 import { CaretLeft } from 'phosphor-react-native';
 import { useNavigation } from '@react-navigation/native';
 
+/**
+ * A component that renders the cart screen. It renders a list of products in
+ * the cart, the total amount, and a checkout button. When the checkout button
+ * is pressed, it shows a modal asking the user to confirm the checkout. If the
+ * user confirms, it clears the cart and dismisses the modal. If the user
+ * cancels, it just dismisses the modal.
+ *
+ * The component uses the {@link removeFromCart}, {@link updateQuantity}, and
+ * {@link clearCart} actions to manage the cart. It also uses the
+ * {@link useAppSelector} hook to get the list of products in the cart and the
+ * total amount.
+ */
 const Cart = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const { items, totalAmount } = useAppSelector((state) => state.cart);
@@ -19,6 +31,25 @@ const Cart = () => {
         dispatch(updateQuantity({ id, quantity }));
     }, 300);
 
+/**
+ * Renders an individual cart item with its details and controls.
+ *
+ * @param {Object} param - The parameter object.
+ * @param {TCartItem} param.item - The cart item to render.
+ *
+ * @returns {JSX.Element} A view representing a cart item with its title,
+ * price, quantity, and controls for adjusting quantity or removing the item.
+ *
+ * The component includes:
+ * - Product title displayed in a text component.
+ * - Price and quantity of the product.
+ * - Buttons to increase or decrease the quantity with debounced updates.
+ * - A button to remove the item from the cart.
+ *
+ * Accessibility features:
+ * - Text components have accessibility labels for screen readers.
+ * - Buttons are accessible with specific roles and labels describing actions.
+ */
     const renderItem = ({ item }: { item: TCartItem }) => (
         <View style={styles.card}>
             <View style={styles.cardContent}>
@@ -70,10 +101,18 @@ const Cart = () => {
         </View>
     );
 
+    /**
+     * Toggles the modal visibility to true, which will show the confirmation modal to the user.
+     * This function is called when the user clicks on the checkout button in the cart screen.
+     */
     const handleCheckout = () => {
         setIsModalVisible(true);
     };
 
+    /**
+     * Called when the user confirms the checkout modal.
+     * Clears the cart and closes the modal.
+     */
     const confirmCheckout = () => {
         dispatch(clearCart());
         setIsModalVisible(false);
@@ -160,8 +199,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginHorizontal: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        // borderBottomWidth: 1,
+        // borderBottomColor: '#eee',
     },
     backButton: {
         marginRight: 16,
@@ -242,7 +281,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 16,
         fontWeight: '500',
-        color: '#1a1a1a'
+        color: '#1a1a1a',
     },
     quantityControls: {
         flexDirection: 'row',
