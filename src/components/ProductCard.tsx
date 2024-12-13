@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator, ViewStyle, ImageStyle, TextStyle } from 'react-native';
 import { TProductModal } from '../models/product';
 import { localAssets } from '../resources/assets';
 import { useAppDispatch } from '../store/store';
 import { addToCart } from '../store/cart/cartSlice';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+    withSequence,
+    runOnJS,
+} from 'react-native-reanimated';
 
 interface ProductCardProps {
     product: TProductModal;
@@ -30,18 +37,29 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const dispatch = useAppDispatch();
     const [isLoading, setIsLoading] = useState(true);
+    const scale = useSharedValue(1);
 
-/**
- * Dispatches the addToCart action to add the current product to the cart.
- * The product is added with a default quantity of 1.
- * This function is called when the "Add to Cart" button is pressed.
- */
-    const handleAddToCart = () => {
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scale.value }],
+    }));
+
+    const addItemToCart = useCallback(() => {
         dispatch(addToCart({ ...product, quantity: 1 }));
+    }, [dispatch, product]);
+
+    const handleAddToCart = () => {
+        scale.value = withSequence(
+            withSpring(1.1, { damping: 2 }),
+            withSpring(1, { damping: 2 }, (finished) => {
+                if (finished) {
+                    runOnJS(addItemToCart)();
+                }
+            })
+        );
     };
 
     return (
-        <View style={styles.card}>
+        <Animated.View style={[styles.card, animatedStyle]}>
             <Image
                 source={product.image ? { uri: product.image } : localAssets.noImage}
                 style={[styles.image, isLoading && styles.imageLoading]}
@@ -82,11 +100,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     </View>
                 </TouchableOpacity>
             </View>
-        </View>
+        </Animated.View>
     );
 };
 
-const styles = StyleSheet.create({
+interface ProductCardStyles {
+    card: ViewStyle;
+    image: ImageStyle;
+    content: ViewStyle;
+    title: TextStyle;
+    price: TextStyle;
+    actions: ViewStyle;
+    button: ViewStyle;
+    buttonContent: ViewStyle;
+    buttonLabel: TextStyle;
+    loader: ViewStyle;
+    imageLoading: ImageStyle;
+}
+
+const styles = StyleSheet.create<ProductCardStyles>({
     card: {
         margin: 8,
         elevation: 4,

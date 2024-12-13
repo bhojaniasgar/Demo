@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View, ViewStyle, TextStyle } from 'react-native';
 
 interface LoaderProps {
   text?: string;
@@ -28,7 +28,12 @@ const Loader: React.FC<LoaderProps> = ({ text }) => {
   );
 };
 
-const styles = StyleSheet.create({
+interface LoaderStyles {
+    container: ViewStyle;
+    text: TextStyle;
+}
+
+const styles = StyleSheet.create<LoaderStyles>({
   container: {
     flex: 1,
     justifyContent: 'center',

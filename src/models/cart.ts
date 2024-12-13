@@ -1,4 +1,4 @@
-import { TProductModal } from "./product";
+import { TProductModal } from './product';
 
 type TCartItem = TProductModal & {
     quantity: number;
